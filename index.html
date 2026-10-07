@@ -1,0 +1,1944 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infix Stack Visualizer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #0b1120;
+    color: #e5e7eb;
+}
+
+.container {
+    max-width: 1450px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* HEADER */
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    color: #38bdf8;
+    font-size: 32px;
+}
+
+.header p {
+    color: #94a3b8;
+}
+
+/* INPUT */
+
+.control-panel {
+    background: #111827;
+    border: 1px solid #263449;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.input-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.input-row input {
+    flex: 1;
+    min-width: 250px;
+    padding: 13px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #020617;
+    color: white;
+    font-size: 17px;
+    outline: none;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: .2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+.start {
+    background: #38bdf8;
+    color: #082f49;
+}
+
+.next {
+    background: #22c55e;
+    color: #052e16;
+}
+
+.previous {
+    background: #64748b;
+    color: white;
+}
+
+.auto {
+    background: #8b5cf6;
+    color: white;
+}
+
+.stop {
+    background: #ef4444;
+    color: white;
+}
+
+.reset {
+    background: #334155;
+    color: white;
+}
+
+/* MODE */
+
+.mode {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.mode button {
+    background: #1e293b;
+    color: white;
+    border: 1px solid #334155;
+}
+
+.mode button.active {
+    background: #8b5cf6;
+    border-color: #a78bfa;
+}
+
+/* MAIN GRID */
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 18px;
+}
+
+/* CODE PANEL */
+
+.panel {
+    background: #111827;
+    border: 1px solid #263449;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.panel-title {
+    padding: 14px 18px;
+    border-bottom: 1px solid #263449;
+    background: #172033;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.code-container {
+    height: 650px;
+    overflow: auto;
+    background: #020617;
+    padding: 12px 0;
+}
+
+.code-line {
+    display: flex;
+    min-height: 24px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    line-height: 24px;
+    padding-right: 12px;
+}
+
+.code-line.highlight {
+    background: #854d0e;
+    border-left: 4px solid #facc15;
+}
+
+.line-number {
+    width: 50px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 14px;
+    color: #64748b;
+    user-select: none;
+}
+
+.highlight .line-number {
+    color: #facc15;
+}
+
+.code-text {
+    white-space: pre;
+    color: #d1d5db;
+}
+
+/* CODE COLORS */
+
+.keyword {
+    color: #c084fc;
+}
+
+.function {
+    color: #60a5fa;
+}
+
+.string {
+    color: #86efac;
+}
+
+.comment {
+    color: #64748b;
+}
+
+.number {
+    color: #fbbf24;
+}
+
+/* VISUALIZATION */
+
+.visual-panel {
+    padding: 18px;
+}
+
+.expression-box {
+    background: #020617;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.expression-box .label {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.expression {
+    margin-top: 8px;
+    font-size: 25px;
+    letter-spacing: 4px;
+    color: #f8fafc;
+    word-break: break-all;
+}
+
+.current {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #020617;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.current-character {
+    width: 58px;
+    height: 58px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f59e0b;
+    color: #451a03;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* STACK */
+
+.stack-area {
+    height: 310px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.stack-wrapper {
+    position: relative;
+    padding-left: 30px;
+}
+
+.stack {
+    width: 130px;
+    min-height: 30px;
+    border-left: 5px solid #64748b;
+    border-right: 5px solid #64748b;
+    border-bottom: 5px solid #64748b;
+    display: flex;
+    flex-direction: column;
+}
+
+.stack-item {
+    height: 48px;
+    background: #7c3aed;
+    border-top: 2px solid #a78bfa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    animation: push .3s ease;
+}
+
+.stack-item.top {
+    background: #f59e0b;
+    color: #451a03;
+}
+
+.top-label {
+    position: absolute;
+    right: -75px;
+    top: 0;
+    color: #f59e0b;
+    font-weight: bold;
+}
+
+@keyframes push {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* INFORMATION */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.info-box {
+    background: #020617;
+    padding: 13px;
+    border-radius: 8px;
+}
+
+.info-box small {
+    color: #64748b;
+}
+
+.info-box strong {
+    display: block;
+    margin-top: 5px;
+    color: #f8fafc;
+}
+
+/* OUTPUT */
+
+.output-panel {
+    margin-top: 18px;
+}
+
+.output {
+    background: #020617;
+    min-height: 65px;
+    border-radius: 9px;
+    padding: 15px;
+    font-size: 24px;
+    letter-spacing: 4px;
+    color: #22c55e;
+    word-break: break-all;
+}
+
+/* CONTROLS */
+
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.progress {
+    height: 7px;
+    background: #334155;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 14px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+    transition: width .3s;
+}
+
+.status {
+    margin-top: 10px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+@media (max-width: 1000px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .code-container {
+        height: 450px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+        <h1>⚙️ Stack-Based Expression Visualizer</h1>
+        <p>
+            Infix → Postfix / Prefix conversion with C code execution
+        </p>
+    </div>
+
+
+    <!-- INPUT -->
+
+    <div class="control-panel">
+
+        <div class="input-row">
+
+            <input
+                id="expressionInput"
+                value="A+B*(C-D)"
+                placeholder="Enter infix expression..."
+            >
+
+            <button class="start" id="startBtn">
+                ▶ Start
+            </button>
+
+            <button class="reset" id="resetBtn">
+                ↻ Reset
+            </button>
+
+        </div>
+
+
+        <div class="mode">
+
+            <button
+                id="postfixMode"
+                class="active">
+                Infix → Postfix
+            </button>
+
+            <button
+                id="prefixMode">
+                Infix → Prefix
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAIN -->
+
+    <div class="main-grid">
+
+        <!-- C CODE -->
+
+        <div class="panel">
+
+            <div class="panel-title">
+                💻 C Source Code
+            </div>
+
+            <div
+                class="code-container"
+                id="codeContainer">
+            </div>
+
+        </div>
+
+
+        <!-- VISUALIZATION -->
+
+        <div class="panel visual-panel">
+
+            <div class="panel-title">
+                📊 Stack Visualization
+            </div>
+
+
+            <br>
+
+
+            <div class="expression-box">
+
+                <div class="label">
+                    INFIX EXPRESSION
+                </div>
+
+                <div
+                    class="expression"
+                    id="expressionDisplay">
+                    A+B*(C-D)
+                </div>
+
+            </div>
+
+
+            <div class="current">
+
+                <div>
+                    <div style="color:#94a3b8">
+                        CURRENT CHARACTER
+                    </div>
+
+                    <div
+                        id="action"
+                        style="margin-top:8px;color:#cbd5e1">
+                        Press Start
+                    </div>
+                </div>
+
+                <div
+                    class="current-character"
+                    id="currentChar">
+                    -
+                </div>
+
+            </div>
+
+
+            <!-- STACK -->
+
+            <div class="stack-area">
+
+                <div class="stack-wrapper">
+
+                    <div
+                        class="stack"
+                        id="stack">
+                    </div>
+
+                    <div class="top-label">
+                        TOP →
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- INFO -->
+
+            <div class="info-grid">
+
+                <div class="info-box">
+
+                    <small>Character Type</small>
+
+                    <strong id="charType">-</strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <small>Precedence</small>
+
+                    <strong id="precedence">-</strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <small>Step</small>
+
+                    <strong>
+                        <span id="step">0</span>
+                        /
+                        <span id="total">0</span>
+                    </strong>
+
+                </div>
+
+                <div class="info-box">
+
+                    <small>Operation</small>
+
+                    <strong id="operation">
+                        Waiting
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- OUTPUT -->
+
+    <div class="panel output-panel">
+
+        <div class="panel-title">
+            📝 Output
+        </div>
+
+        <div style="padding:18px">
+
+            <div
+                class="output"
+                id="output">
+                -
+            </div>
+
+            <div class="progress">
+                <div
+                    class="progress-bar"
+                    id="progressBar">
+                </div>
+            </div>
+
+            <div class="controls">
+
+                <button
+                    class="previous"
+                    id="previousBtn">
+                    ◀ Previous
+                </button>
+
+                <button
+                    class="next"
+                    id="nextBtn">
+                    Next ▶
+                </button>
+
+                <button
+                    class="auto"
+                    id="autoBtn">
+                    ▶ Auto Play
+                </button>
+
+                <button
+                    class="stop"
+                    id="stopBtn">
+                    ■ Stop
+                </button>
+
+            </div>
+
+            <div
+                class="status"
+                id="status">
+                Enter an expression and press Start.
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   YOUR C PROGRAM
+   ========================================================= */
+
+const cCode = `#include<stdio.h>
+#include<ctype.h>
+#include<string.h>
+
+int stack[100], top = -1;
+
+int precedence(char op)
+{
+    switch (op)
+    {
+    case '+':
+    case '-':
+        return 1;
+
+    case '*':
+    case '/':
+        return 2;
+
+    case '^':
+        return 3;
+    }
+
+    return -1;
+}
+
+int infixtoprefix(char infix[], char prefix[])
+{
+    int i, j = 0;
+    char temp;
+
+    for (i = 0; infix[i] != '\\0'; i++)
+    {
+        if (isalnum(infix[i]))
+        {
+            prefix[j++] = infix[i];
+        }
+        else if (infix[i] == '(')
+        {
+            stack[++top] = infix[i];
+        }
+        else if (infix[i] == ')')
+        {
+            while (top != -1 && stack[top] != '(')
+            {
+                prefix[j++] = stack[top--];
+            }
+
+            top--;
+        }
+        else
+        {
+            while (
+                top != -1 &&
+                precedence(stack[top]) >= precedence(infix[i])
+            )
+            {
+                prefix[j++] = stack[top--];
+            }
+
+            stack[++top] = infix[i];
+        }
+    }
+
+    while (top != -1)
+    {
+        prefix[j++] = stack[top--];
+    }
+
+    prefix[j] = '\\0';
+
+    return 0;
+}
+
+int infixtopostfix(char infix[], char postfix[])
+{
+    int i, j = 0;
+    char temp;
+
+    for (i = 0; infix[i] != '\\0'; i++)
+    {
+        if (isalnum(infix[i]))
+        {
+            postfix[j++] = infix[i];
+        }
+        else if (infix[i] == '(')
+        {
+            stack[++top] = infix[i];
+        }
+        else if (infix[i] == ')')
+        {
+            while (top != -1 && stack[top] != '(')
+            {
+                postfix[j++] = stack[top--];
+            }
+
+            top--;
+        }
+        else
+        {
+            while (
+                top != -1 &&
+                precedence(stack[top]) >= precedence(infix[i])
+            )
+            {
+                postfix[j++] = stack[top--];
+            }
+
+            stack[++top] = infix[i];
+        }
+    }
+
+    while (top != -1)
+    {
+        postfix[j++] = stack[top--];
+    }
+
+    postfix[j] = '\\0';
+
+    return 0;
+}
+
+int main()
+{
+    char infix[100], prefix[100], postfix[100];
+
+    printf("Enter the infix expression: ");
+
+    fgets(infix, sizeof(infix), stdin);
+
+    infix[strcspn(infix, "\\n")] = '\\0';
+
+    top = -1;
+
+    infixtoprefix(infix, prefix);
+
+    top = -1;
+
+    infixtopostfix(infix, postfix);
+
+    printf("Prefix expression: %s\\n", prefix);
+
+    printf("Postfix expression: %s\\n", postfix);
+
+    return 0;
+}`;
+
+
+/* =========================================================
+   RENDER C CODE
+   ========================================================= */
+
+function renderCode() {
+
+    const container =
+        document.getElementById("codeContainer");
+
+    container.innerHTML = "";
+
+    const lines = cCode.split("\n");
+
+    lines.forEach((line, index) => {
+
+        const row =
+            document.createElement("div");
+
+        row.className = "code-line";
+
+        row.dataset.line = index + 1;
+
+
+        const number =
+            document.createElement("div");
+
+        number.className = "line-number";
+
+        number.textContent = index + 1;
+
+
+        const code =
+            document.createElement("div");
+
+        code.className = "code-text";
+
+
+        code.innerHTML =
+            highlightCode(line);
+
+
+        row.appendChild(number);
+        row.appendChild(code);
+
+        container.appendChild(row);
+
+    });
+}
+
+
+/* =========================================================
+   SIMPLE C SYNTAX HIGHLIGHTING
+   ========================================================= */
+
+function highlightCode(line) {
+
+    let escaped =
+        line
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+
+    if (escaped.trim().startsWith("//")) {
+
+        return `<span class="comment">${escaped}</span>`;
+
+    }
+
+
+    escaped =
+        escaped.replace(
+            /("(?:[^"\\]|\\.)*")/g,
+            '<span class="string">$1</span>'
+        );
+
+
+    escaped =
+        escaped.replace(
+            /\b(int|char|return|case|switch|if|else|while|for|void)\b/g,
+            '<span class="keyword">$1</span>'
+        );
+
+
+    escaped =
+        escaped.replace(
+            /\b(printf|fgets|isalnum|strcspn|precedence|infixtoprefix|infixtopostfix|main)\b/g,
+            '<span class="function">$1</span>'
+        );
+
+
+    escaped =
+        escaped.replace(
+            /\b\d+\b/g,
+            '<span class="number">$&</span>'
+        );
+
+
+    return escaped;
+}
+
+
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
+
+let mode = "postfix";
+
+let steps = [];
+
+let currentStep = 0;
+
+let autoTimer = null;
+
+
+/* =========================================================
+   PRECEDENCE
+   ========================================================= */
+
+function precedence(op) {
+
+    if (op === "+" || op === "-")
+        return 1;
+
+    if (op === "*" || op === "/")
+        return 2;
+
+    if (op === "^")
+        return 3;
+
+    return -1;
+}
+
+
+function isOperator(ch) {
+
+    return ["+", "-", "*", "/", "^"]
+        .includes(ch);
+
+}
+
+
+/* =========================================================
+   MAP VISUALIZATION TO C CODE
+   ========================================================= */
+
+function getCodeLines(action, type) {
+
+    if (action.includes("Add operand")) {
+
+        return [47, 89];
+
+    }
+
+    if (action.includes("Push '('")) {
+
+        return [51, 93];
+
+    }
+
+    if (action.includes("Pop operator")) {
+
+        return [57, 99];
+
+    }
+
+    if (action.includes("Push operator")) {
+
+        return [64, 106];
+
+    }
+
+    if (action.includes("remaining")) {
+
+        return [72, 114];
+
+    }
+
+    if (action.includes("Remove '('")) {
+
+        return [55, 97];
+
+    }
+
+    if (action.includes("Ready")) {
+
+        return [42, 84];
+
+    }
+
+    return [];
+
+}
+
+
+/* =========================================================
+   HIGHLIGHT CODE
+   ========================================================= */
+
+function highlightLines(lines) {
+
+    document
+        .querySelectorAll(".code-line")
+        .forEach(line => {
+
+            line.classList.remove("highlight");
+
+        });
+
+
+    lines.forEach(number => {
+
+        const line =
+            document.querySelector(
+                `.code-line[data-line="${number}"]`
+            );
+
+        if (line) {
+
+            line.classList.add("highlight");
+
+            line.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   POSTFIX STEPS
+   ========================================================= */
+
+function createPostfixSteps(infix) {
+
+    let stack = [];
+
+    let output = "";
+
+    let result = [];
+
+
+    result.push({
+        char: "-",
+        action: "Ready to start",
+        type: "-",
+        precedence: "-",
+        stack: [],
+        output: "",
+        lines: [84]
+    });
+
+
+    for (let i = 0; i < infix.length; i++) {
+
+        const ch = infix[i];
+
+        if (ch === " ")
+            continue;
+
+
+        /* OPERAND */
+
+        if (/[a-zA-Z0-9]/.test(ch)) {
+
+            output += ch;
+
+            result.push({
+                char: ch,
+                action: "Add operand to output",
+                type: "Operand",
+                precedence: "-",
+                stack: [...stack],
+                output,
+                lines: [89]
+            });
+
+        }
+
+
+        /* LEFT BRACKET */
+
+        else if (ch === "(") {
+
+            stack.push(ch);
+
+            result.push({
+                char: ch,
+                action: "Push '(' onto stack",
+                type: "Left Parenthesis",
+                precedence: "-",
+                stack: [...stack],
+                output,
+                lines: [93]
+            });
+
+        }
+
+
+        /* RIGHT BRACKET */
+
+        else if (ch === ")") {
+
+            while (
+                stack.length &&
+                stack[stack.length - 1] !== "("
+            ) {
+
+                output += stack.pop();
+
+                result.push({
+                    char: ch,
+                    action: "Pop operator to output",
+                    type: "Right Parenthesis",
+                    precedence: "-",
+                    stack: [...stack],
+                    output,
+                    lines: [99]
+                });
+
+            }
+
+
+            if (stack.length)
+                stack.pop();
+
+
+            result.push({
+                char: ch,
+                action: "Remove '(' from stack",
+                type: "Right Parenthesis",
+                precedence: "-",
+                stack: [...stack],
+                output,
+                lines: [97]
+            });
+
+        }
+
+
+        /* OPERATOR */
+
+        else if (isOperator(ch)) {
+
+            while (
+                stack.length &&
+                stack[stack.length - 1] !== "(" &&
+                precedence(stack[stack.length - 1])
+                >= precedence(ch)
+            ) {
+
+                output += stack.pop();
+
+                result.push({
+                    char: ch,
+                    action:
+                        "Pop higher/equal precedence operator",
+                    type: "Operator",
+                    precedence: precedence(ch),
+                    stack: [...stack],
+                    output,
+                    lines: [99]
+                });
+
+            }
+
+
+            stack.push(ch);
+
+
+            result.push({
+                char: ch,
+                action: "Push operator onto stack",
+                type: "Operator",
+                precedence: precedence(ch),
+                stack: [...stack],
+                output,
+                lines: [106]
+            });
+
+        }
+
+    }
+
+
+    /* POP REMAINING */
+
+    while (stack.length) {
+
+        output += stack.pop();
+
+        result.push({
+            char: "END",
+            action: "Pop remaining operator",
+            type: "End",
+            precedence: "-",
+            stack: [...stack],
+            output,
+            lines: [114]
+        });
+
+    }
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   PREFIX STEPS
+   ========================================================= */
+
+function createPrefixSteps(infix) {
+
+    /*
+       Correct prefix algorithm:
+
+       Reverse infix
+       Swap brackets
+       Convert to postfix
+       Reverse final output
+    */
+
+    const reversed =
+        infix
+        .split("")
+        .reverse()
+        .map(ch => {
+
+            if (ch === "(")
+                return ")";
+
+            if (ch === ")")
+                return "(";
+
+            return ch;
+
+        })
+        .join("");
+
+
+    let stack = [];
+
+    let temporaryOutput = "";
+
+    let temp = [];
+
+
+    temp.push({
+        char: "-",
+        action: "Reverse infix and swap parentheses",
+        type: "Preparation",
+        precedence: "-",
+        stack: [],
+        output: "",
+        lines: [30]
+    });
+
+
+    for (let i = 0; i < reversed.length; i++) {
+
+        const ch = reversed[i];
+
+        if (ch === " ")
+            continue;
+
+
+        if (/[a-zA-Z0-9]/.test(ch)) {
+
+            temporaryOutput += ch;
+
+            temp.push({
+                char: ch,
+                action: "Add operand",
+                type: "Operand",
+                precedence: "-",
+                stack: [...stack],
+                output:
+                    temporaryOutput
+                    .split("")
+                    .reverse()
+                    .join(""),
+                lines: [47]
+            });
+
+        }
+
+
+        else if (ch === "(") {
+
+            stack.push(ch);
+
+            temp.push({
+                char: ch,
+                action: "Push '(' onto stack",
+                type: "Left Parenthesis",
+                precedence: "-",
+                stack: [...stack],
+                output:
+                    temporaryOutput
+                    .split("")
+                    .reverse()
+                    .join(""),
+                lines: [51]
+            });
+
+        }
+
+
+        else if (ch === ")") {
+
+            while (
+                stack.length &&
+                stack[stack.length - 1] !== "("
+            ) {
+
+                temporaryOutput += stack.pop();
+
+                temp.push({
+                    char: ch,
+                    action: "Pop operator",
+                    type: "Right Parenthesis",
+                    precedence: "-",
+                    stack: [...stack],
+                    output:
+                        temporaryOutput
+                        .split("")
+                        .reverse()
+                        .join(""),
+                    lines: [57]
+                });
+
+            }
+
+
+            if (stack.length)
+                stack.pop();
+
+
+            temp.push({
+                char: ch,
+                action: "Remove '('",
+                type: "Right Parenthesis",
+                precedence: "-",
+                stack: [...stack],
+                output:
+                    temporaryOutput
+                    .split("")
+                    .reverse()
+                    .join(""),
+                lines: [55]
+            });
+
+        }
+
+
+        else if (isOperator(ch)) {
+
+            while (
+                stack.length &&
+                stack[stack.length - 1] !== "(" &&
+                precedence(stack[stack.length - 1])
+                > precedence(ch)
+            ) {
+
+                temporaryOutput += stack.pop();
+
+                temp.push({
+                    char: ch,
+                    action: "Pop operator",
+                    type: "Operator",
+                    precedence: precedence(ch),
+                    stack: [...stack],
+                    output:
+                        temporaryOutput
+                        .split("")
+                        .reverse()
+                        .join(""),
+                    lines: [57]
+                });
+
+            }
+
+
+            stack.push(ch);
+
+
+            temp.push({
+                char: ch,
+                action: "Push operator",
+                type: "Operator",
+                precedence: precedence(ch),
+                stack: [...stack],
+                output:
+                    temporaryOutput
+                    .split("")
+                    .reverse()
+                    .join(""),
+                lines: [64]
+            });
+
+        }
+
+    }
+
+
+    while (stack.length) {
+
+        temporaryOutput += stack.pop();
+
+        temp.push({
+            char: "END",
+            action: "Pop remaining operator",
+            type: "End",
+            precedence: "-",
+            stack: [...stack],
+            output:
+                temporaryOutput
+                .split("")
+                .reverse()
+                .join(""),
+            lines: [72]
+        });
+
+    }
+
+
+    temp.push({
+        char: "DONE",
+        action: "Prefix conversion complete",
+        type: "Complete",
+        precedence: "-",
+        stack: [],
+        output:
+            temporaryOutput
+            .split("")
+            .reverse()
+            .join(""),
+        lines: [72]
+    });
+
+
+    return temp;
+
+}
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+function startVisualization() {
+
+    stopAutoPlay();
+
+    const input =
+        document
+        .getElementById("expressionInput")
+        .value
+        .trim();
+
+
+    if (!input) {
+
+        alert("Please enter an infix expression.");
+
+        return;
+
+    }
+
+
+    if (!/^[a-zA-Z0-9+\-*/^() ]+$/.test(input)) {
+
+        alert(
+            "Invalid expression. Use operands, + - * / ^ and parentheses."
+        );
+
+        return;
+
+    }
+
+
+    document
+        .getElementById("expressionDisplay")
+        .textContent = input;
+
+
+    if (mode === "postfix") {
+
+        steps =
+            createPostfixSteps(input);
+
+    } else {
+
+        steps =
+            createPrefixSteps(input);
+
+    }
+
+
+    currentStep = 0;
+
+
+    document
+        .getElementById("total")
+        .textContent =
+            steps.length - 1;
+
+
+    showStep();
+
+}
+
+
+/* =========================================================
+   SHOW STEP
+   ========================================================= */
+
+function showStep() {
+
+    if (!steps.length)
+        return;
+
+
+    const data =
+        steps[currentStep];
+
+
+    document
+        .getElementById("currentChar")
+        .textContent =
+            data.char;
+
+
+    document
+        .getElementById("action")
+        .textContent =
+            data.action;
+
+
+    document
+        .getElementById("charType")
+        .textContent =
+            data.type;
+
+
+    document
+        .getElementById("precedence")
+        .textContent =
+            data.precedence;
+
+
+    document
+        .getElementById("operation")
+        .textContent =
+            data.action;
+
+
+    document
+        .getElementById("output")
+        .textContent =
+            data.output || "-";
+
+
+    document
+        .getElementById("step")
+        .textContent =
+            currentStep;
+
+
+    const percentage =
+        steps.length <= 1
+        ? 0
+        : (currentStep / (steps.length - 1)) * 100;
+
+
+    document
+        .getElementById("progressBar")
+        .style.width =
+            percentage + "%";
+
+
+    renderStack(data.stack);
+
+    highlightLines(data.lines || []);
+
+
+    document
+        .getElementById("status")
+        .textContent =
+            data.action;
+
+}
+
+
+/* =========================================================
+   STACK RENDER
+   ========================================================= */
+
+function renderStack(stack) {
+
+    const element =
+        document.getElementById("stack");
+
+
+    element.innerHTML = "";
+
+
+    /*
+       stack[0] is bottom
+       stack[last] is top
+    */
+
+    stack.forEach((value, index) => {
+
+        const item =
+            document.createElement("div");
+
+
+        item.className =
+            "stack-item";
+
+
+        if (index === stack.length - 1) {
+
+            item.classList.add("top");
+
+        }
+
+
+        item.textContent = value;
+
+        element.appendChild(item);
+
+    });
+
+}
+
+
+/* =========================================================
+   NEXT
+   ========================================================= */
+
+function nextStep() {
+
+    if (!steps.length) {
+
+        startVisualization();
+
+        return;
+
+    }
+
+
+    if (currentStep < steps.length - 1) {
+
+        currentStep++;
+
+        showStep();
+
+    }
+
+}
+
+
+/* =========================================================
+   PREVIOUS
+   ========================================================= */
+
+function previousStep() {
+
+    if (!steps.length)
+        return;
+
+
+    if (currentStep > 0) {
+
+        currentStep--;
+
+        showStep();
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTO PLAY
+   ========================================================= */
+
+function autoPlay() {
+
+    if (!steps.length) {
+
+        startVisualization();
+
+    }
+
+
+    stopAutoPlay();
+
+
+    autoTimer =
+        setInterval(() => {
+
+            if (currentStep >= steps.length - 1) {
+
+                stopAutoPlay();
+
+                return;
+
+            }
+
+
+            currentStep++;
+
+            showStep();
+
+        }, 1000);
+
+}
+
+
+/* =========================================================
+   STOP
+   ========================================================= */
+
+function stopAutoPlay() {
+
+    if (autoTimer !== null) {
+
+        clearInterval(autoTimer);
+
+        autoTimer = null;
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+function resetVisualization() {
+
+    stopAutoPlay();
+
+    steps = [];
+
+    currentStep = 0;
+
+
+    document
+        .getElementById("currentChar")
+        .textContent = "-";
+
+
+    document
+        .getElementById("action")
+        .textContent = "Press Start";
+
+
+    document
+        .getElementById("charType")
+        .textContent = "-";
+
+
+    document
+        .getElementById("precedence")
+        .textContent = "-";
+
+
+    document
+        .getElementById("operation")
+        .textContent = "Waiting";
+
+
+    document
+        .getElementById("output")
+        .textContent = "-";
+
+
+    document
+        .getElementById("step")
+        .textContent = "0";
+
+
+    document
+        .getElementById("total")
+        .textContent = "0";
+
+
+    document
+        .getElementById("progressBar")
+        .style.width = "0%";
+
+
+    document
+        .getElementById("stack")
+        .innerHTML = "";
+
+
+    highlightLines([]);
+
+    document
+        .getElementById("status")
+        .textContent =
+            "Enter an expression and press Start.";
+
+}
+
+
+/* =========================================================
+   MODE BUTTONS
+   ========================================================= */
+
+document
+    .getElementById("postfixMode")
+    .addEventListener("click", () => {
+
+        mode = "postfix";
+
+        document
+            .getElementById("postfixMode")
+            .classList.add("active");
+
+        document
+            .getElementById("prefixMode")
+            .classList.remove("active");
+
+        resetVisualization();
+
+    });
+
+
+document
+    .getElementById("prefixMode")
+    .addEventListener("click", () => {
+
+        mode = "prefix";
+
+        document
+            .getElementById("prefixMode")
+            .classList.add("active");
+
+        document
+            .getElementById("postfixMode")
+            .classList.remove("active");
+
+        resetVisualization();
+
+    });
+
+
+/* =========================================================
+   BUTTON EVENTS
+   ========================================================= */
+
+document
+    .getElementById("startBtn")
+    .addEventListener("click", startVisualization);
+
+
+document
+    .getElementById("resetBtn")
+    .addEventListener("click", resetVisualization);
+
+
+document
+    .getElementById("nextBtn")
+    .addEventListener("click", nextStep);
+
+
+document
+    .getElementById("previousBtn")
+    .addEventListener("click", previousStep);
+
+
+document
+    .getElementById("autoBtn")
+    .addEventListener("click", autoPlay);
+
+
+document
+    .getElementById("stopBtn")
+    .addEventListener("click", stopAutoPlay);
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+renderCode();
+
+</script>
+
+</body>
+</html>
+```
